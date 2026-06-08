@@ -40,6 +40,14 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+)
+
 app.include_router(api_router)
 app.add_exception_handler(NotFoundError, handle_not_found)
 app.add_exception_handler(ForbiddenError, handle_forbidden)
