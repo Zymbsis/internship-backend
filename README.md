@@ -6,6 +6,7 @@ Backend API built with FastAPI.
 
 - Python 3.12+
 - [uv](https://docs.astral.sh/uv/) - package and project manager
+- [Docker](https://docs.docker.com/) - required for deployment; optional for local development
 
 ## Getting Started
 
@@ -19,12 +20,16 @@ uv sync --group dev
 
 ### 2. Environment variables
 
-Copy the sample environment file. No variables are required for the initial setup, but this keeps
-the workflow ready for future configuration:
+Copy the sample environment file:
 
 ```bash
 cp .env.sample .env
 ```
+
+| Variable       | Description                                | Default |
+| -------------- | ------------------------------------------ | ------- |
+| `PORT`         | Host port when running with Docker Compose | `8000`  |
+| `CORS_ORIGINS` | Allowed browser origins (JSON array)       | `[]`    |
 
 ## Running the Application
 
@@ -43,6 +48,37 @@ uv run fastapi dev
 
 ```bash
 uv run fastapi run
+```
+
+### Docker
+
+Build the image once (or after changing `Dockerfile`, `pyproject.toml`, or `uv.lock`):
+
+```bash
+docker compose build
+```
+
+Production-like run (uses `fastapi run` from the Dockerfile):
+
+```bash
+docker compose up
+```
+
+Local development in a container with auto-reload (code changes are picked up via volume mount, no
+rebuild needed):
+
+```bash
+docker compose --profile dev up
+```
+
+The container listens on port `8000` internally. The host port is taken from `PORT` in `.env`
+(defaults to `8000`).
+
+To build and run the image without Compose:
+
+```bash
+docker build -t internship-backend .
+docker run --rm -p 8000:8000 --env-file .env internship-backend
 ```
 
 The API will be available at:
@@ -126,3 +162,4 @@ uv run pytest
 - [ruff](https://docs.astral.sh/ruff/) - linting and formatting
 - [mypy](https://mypy-lang.org/) - static type checking
 - [pre-commit](https://pre-commit.com/) - Git hooks
+- [Docker](https://docs.docker.com/) - containerized deployment
