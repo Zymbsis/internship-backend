@@ -222,17 +222,25 @@ alembic/                 # Database migrations (Alembic)
 app/
 ├── main.py              # Application entry point and lifespan (DB connect/disconnect)
 ├── config.py            # Settings and environment configuration
+├── core/                # Shared core utilities (constants, logging setup)
 ├── db/                  # PostgreSQL and Redis connection setup and dependencies
+<<<<<<< HEAD
 <<<<<<< HEAD
 ├── models/              # SQLAlchemy ORM models and mixins
 =======
 >>>>>>> b4876dd (Add PostgreSQL and Redis database integration)
+=======
+├── models/              # SQLAlchemy ORM models and mixins
+>>>>>>> 362732f (Add database migrations, User model, and logging.)
 ├── routers/             # API route handlers
 ├── services/            # Business logic
 ├── repositories/        # Data access layer
 ├── schemas/             # Pydantic request/response models
 ├── exceptions/          # Custom exceptions and handlers
+<<<<<<< HEAD
 ├── core/                # Shared core utilities (constants, logging setup)
+=======
+>>>>>>> 362732f (Add database migrations, User model, and logging.)
 ├── utils/               # Helper utilities
 └── tests/               # Test suite
 alembic.ini              # Alembic configuration
