@@ -48,6 +48,58 @@ Keep `POSTGRES__HOST=localhost` and `REDIS__HOST=localhost` in `.env` for runnin
 host with `uv run`. Docker Compose overrides these to `postgres` and `redis` for the `api` and
 `api-dev` services automatically.
 
+### 3. Database migrations
+
+Start PostgreSQL before creating or applying migrations:
+
+```bash
+docker compose up postgres -d
+```
+
+Apply all existing migrations after cloning the repository or pulling new migration files:
+
+```bash
+uv run alembic upgrade head
+```
+
+When SQLAlchemy models change, create a new migration and apply it:
+
+```bash
+uv run alembic revision --autogenerate -m "short description of the change"
+uv run alembic upgrade head
+```
+
+Useful commands:
+
+| Command                       | Description                                         |
+| ----------------------------- | --------------------------------------------------- |
+| `uv run alembic current`      | Show the migration revision applied to the database |
+| `uv run alembic history`      | List all migration revisions                        |
+| `uv run alembic downgrade -1` | Roll back the most recent migration                 |
+
+Migration scripts live in `alembic/versions/`. Alembic reads the database URL from `.env` through
+`app/config.py` in `alembic/env.py`.
+
+### 4. Logging
+
+Logging is configured in `app/core/logging.py` and initialized when the application starts. Log
+level depends on `ENVIRONMENT`:
+
+| `ENVIRONMENT` | Log level |
+| ------------- | --------- |
+| `dev`         | `DEBUG`   |
+| `prod`        | `INFO`    |
+
+Logs are written to stdout. Application startup/shutdown and handled exceptions are logged
+automatically. Use the standard library in other modules:
+
+```python
+import logging
+
+logger = logging.getLogger(__name__)
+logger.info("message")
+```
+
 ## Running the Application
 
 The app runs on [Uvicorn](https://www.uvicorn.org/) (ASGI server). The FastAPI CLI wraps it for
@@ -166,18 +218,21 @@ Expected response:
 ## Project Structure
 
 ```
+alembic/                 # Database migrations (Alembic)
 app/
 ├── main.py              # Application entry point and lifespan (DB connect/disconnect)
 ├── config.py            # Settings and environment configuration
 ├── db/                  # PostgreSQL and Redis connection setup and dependencies
+├── models/              # SQLAlchemy ORM models and mixins
 ├── routers/             # API route handlers
 ├── services/            # Business logic
 ├── repositories/        # Data access layer
 ├── schemas/             # Pydantic request/response models
 ├── exceptions/          # Custom exceptions and handlers
-├── core/                # Shared core utilities
+├── core/                # Shared core utilities (constants, logging setup)
 ├── utils/               # Helper utilities
 └── tests/               # Test suite
+alembic.ini              # Alembic configuration
 ```
 
 ## Code Quality
@@ -218,6 +273,7 @@ uv run pytest
 - [Uvicorn](https://www.uvicorn.org/) - ASGI server
 - [Pydantic](https://docs.pydantic.dev/) - data validation
 - [SQLAlchemy](https://www.sqlalchemy.org/) - async ORM (PostgreSQL)
+- [Alembic](https://alembic.sqlalchemy.org/) - database migrations
 - [asyncpg](https://github.com/MagicStack/asyncpg) - PostgreSQL async driver
 - [Redis](https://redis.io/) - in-memory data store
 - [pytest](https://docs.pytest.org/) - testing
