@@ -12,7 +12,7 @@ def test_health_check(client: TestClient) -> None:
 
     data = HealthResponse.model_validate(response.json())
     assert data == HealthResponse(
-        status_code=200,
+        status_code=HTTP_200_OK,
         detail="ok",
         result="working",
     )
