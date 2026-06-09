@@ -1,26 +1,79 @@
 name: internship-backend
 
 services:
-  api:
-    build: .
-    ports:
-      - "${PORT:-8000}:8000"
+  postgres:
+    image: postgres:17-alpine
     env_file:
       - path: .env
         required: false
+    environment:
+      POSTGRES_USER: ${POSTGRES__USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES__PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES__DB:-postgres}
+    ports:
+      - '${POSTGRES__PORT:-5432}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '${REDIS__PORT:-6379}:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  api:
+    profiles: [prod]
+    build: .
+    ports:
+      - '${PORT:-8000}:8000'
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      POSTGRES__HOST: postgres
+      REDIS__HOST: redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     restart: unless-stopped
 
   api-dev:
     profiles: [dev]
     build: .
     ports:
-      - "${PORT:-8000}:8000"
+      - '${PORT:-8000}:8000'
     env_file:
       - path: .env
         required: false
+    environment:
+      POSTGRES__HOST: postgres
+      REDIS__HOST: redis
     volumes:
       - .:/app
       - /app/.venv
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     command:
       - uv
       - run
@@ -28,6 +81,10 @@ services:
       - dev
       - app/main.py
       - --host
-      - "0.0.0.0"
+      - '0.0.0.0'
       - --port
-      - "8000"
+      - '8000'
+
+volumes:
+  postgres_data:
+  redis_data:
