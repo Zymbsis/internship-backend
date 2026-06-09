@@ -223,7 +223,10 @@ app/
 ├── main.py              # Application entry point and lifespan (DB connect/disconnect)
 ├── config.py            # Settings and environment configuration
 ├── db/                  # PostgreSQL and Redis connection setup and dependencies
+<<<<<<< HEAD
 ├── models/              # SQLAlchemy ORM models and mixins
+=======
+>>>>>>> b4876dd (Add PostgreSQL and Redis database integration)
 ├── routers/             # API route handlers
 ├── services/            # Business logic
 ├── repositories/        # Data access layer
