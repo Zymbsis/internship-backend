@@ -1,6 +1,6 @@
 from starlette.status import HTTP_200_OK
 
-from app.schemas.responses.health import HealthResponse
+from app.schemas.health import HealthResponse
 from app.services.health_service import HealthService
 
 

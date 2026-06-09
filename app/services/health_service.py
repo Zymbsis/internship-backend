@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from app.schemas.responses.health import HealthResponse
+from app.schemas.health import HealthResponse
 
 
 class HealthService:

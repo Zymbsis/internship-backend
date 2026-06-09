@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 from httpx2 import Response
 from starlette.status import HTTP_200_OK
 
-from app.schemas.responses.health import HealthResponse
+from app.schemas.health import HealthResponse
 
 
 def test_health_check(client: TestClient) -> None:
