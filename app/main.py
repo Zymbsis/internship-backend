@@ -1,12 +1,28 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.db import postgres, redis
 from app.exceptions.base import AppError
 from app.exceptions.handlers import app_error_handler
 from app.routers.api import api_router
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    await postgres.connect(app)
+    await redis.initialize(app)
+
+    yield
+
+    await redis.shutdown(app)
+    await postgres.disconnect(app)
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
