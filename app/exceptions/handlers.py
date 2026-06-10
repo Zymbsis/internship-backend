@@ -1,10 +1,9 @@
 import logging
 
-from fastapi import Request
+from fastapi import Request, status
 from fastapi.responses import JSONResponse
-from starlette import status
 
-from app.exceptions.base import AppError, ForbiddenError, NotFoundError
+from app.exceptions.base import AppError, ConflictError, ForbiddenError, NotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +17,19 @@ async def handle_not_found(_request: Request, exc: Exception) -> JSONResponse:
 
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
+        content={"detail": exc.message},
+    )
+
+
+async def handle_conflict(_request: Request, exc: Exception) -> JSONResponse:
+    if not isinstance(exc, ConflictError):
+        raise exc
+
+    detail = f"Conflict: {exc.message}"
+    logger.warning(detail)
+
+    return JSONResponse(
+        status_code=status.HTTP_409_CONFLICT,
         content={"detail": exc.message},
     )
 

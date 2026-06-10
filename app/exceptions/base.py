@@ -13,3 +13,7 @@ class ForbiddenError(AppError):
 
 class NotFoundError(AppError):
     message = "Resource not found"
+
+
+class ConflictError(AppError):
+    message = "Conflict"
