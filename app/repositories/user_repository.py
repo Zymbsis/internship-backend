@@ -15,12 +15,12 @@ class UserRepository:
     async def get_one_by_id(self, user_id: UUID) -> User | None:
         stmt = select(User).where(User.id == user_id)
         result = await self._session.execute(stmt)
-        return result.scalar_one_or_none()
+        return result.scalar()
 
     async def get_one_by_email(self, email: str) -> User | None:
         stmt = select(User).where(User.email == email)
         result = await self._session.execute(stmt)
-        return result.scalar_one_or_none()
+        return result.scalar()
 
     async def get_many(self, offset: int, limit: int) -> tuple[list[User], int]:
         users_stmt = select(User).order_by(User.created_at).offset(offset).limit(limit)
@@ -45,6 +45,9 @@ class UserRepository:
 
     async def delete(self, user: User) -> None:
         await self._session.delete(user)
+
+    async def commit(self) -> None:
+        await self._session.commit()
 
 
 UserRepositoryDep = Annotated[UserRepository, Depends()]

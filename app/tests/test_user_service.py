@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, create_autospec, patch
 from uuid import uuid4
 
 import pytest
-from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from app.exceptions.base import ConflictError, NotFoundError
 from app.models import User as UserModel
@@ -42,15 +41,9 @@ def user_repository() -> AsyncMock:
 
 
 @pytest.fixture
-def session() -> AsyncMock:
-    return cast(AsyncMock, create_autospec(AsyncSession, instance=True))
-
-
-@pytest.fixture
-def user_service(user_repository: AsyncMock, session: AsyncMock) -> UserService:
+def user_service(user_repository: AsyncMock) -> UserService:
     return UserService(
         cast(UserRepository, user_repository),
-        cast(AsyncSession, session),
     )
 
 
@@ -95,7 +88,6 @@ async def test_get_user_by_id_raises_not_found(
 async def test_create_user_returns_user_and_commits(
     user_service: UserService,
     user_repository: AsyncMock,
-    session: AsyncMock,
 ) -> None:
     user = make_user()
     user_repository.get_one_by_email.return_value = None
@@ -112,14 +104,13 @@ async def test_create_user_returns_user_and_commits(
 
     user_repository.get_one_by_email.assert_awaited_once_with(payload.email)
     user_repository.create.assert_awaited_once()
-    session.commit.assert_awaited_once()
+    user_repository.commit.assert_awaited_once()
     assert result == UserDetailResponse.model_validate(user)
 
 
 async def test_create_user_raises_conflict_when_email_exists(
     user_service: UserService,
     user_repository: AsyncMock,
-    session: AsyncMock,
 ) -> None:
     existing = make_user()
     user_repository.get_one_by_email.return_value = existing
@@ -134,13 +125,12 @@ async def test_create_user_raises_conflict_when_email_exists(
         await user_service.create_user(payload)
 
     user_repository.create.assert_not_awaited()
-    session.commit.assert_not_awaited()
+    user_repository.commit.assert_not_awaited()
 
 
 async def test_update_user_updates_fields_and_commits(
     user_service: UserService,
     user_repository: AsyncMock,
-    session: AsyncMock,
 ) -> None:
     user = make_user()
     user_repository.get_one_by_id.return_value = user
@@ -152,14 +142,13 @@ async def test_update_user_updates_fields_and_commits(
     assert user.first_name == UPDATED_FIRST_NAME
     assert user.last_name == UPDATED_LAST_NAME
     user_repository.update.assert_awaited_once_with(user)
-    session.commit.assert_awaited_once()
+    user_repository.commit.assert_awaited_once()
     assert result == UserDetailResponse.model_validate(user)
 
 
 async def test_update_user_raises_not_found(
     user_service: UserService,
     user_repository: AsyncMock,
-    session: AsyncMock,
 ) -> None:
     user_id = uuid4()
     user_repository.get_one_by_id.return_value = None
@@ -169,13 +158,12 @@ async def test_update_user_raises_not_found(
         await user_service.update_user(user_id, payload)
 
     user_repository.update.assert_not_awaited()
-    session.commit.assert_not_awaited()
+    user_repository.commit.assert_not_awaited()
 
 
 async def test_delete_user_deletes_and_commits(
     user_service: UserService,
     user_repository: AsyncMock,
-    session: AsyncMock,
 ) -> None:
     user = make_user()
     user_repository.get_one_by_id.return_value = user
@@ -183,13 +171,12 @@ async def test_delete_user_deletes_and_commits(
     await user_service.delete_user(user.id)
 
     user_repository.delete.assert_awaited_once_with(user)
-    session.commit.assert_awaited_once()
+    user_repository.commit.assert_awaited_once()
 
 
 async def test_delete_user_raises_not_found(
     user_service: UserService,
     user_repository: AsyncMock,
-    session: AsyncMock,
 ) -> None:
     user_id = uuid4()
     user_repository.get_one_by_id.return_value = None
@@ -198,4 +185,4 @@ async def test_delete_user_raises_not_found(
         await user_service.delete_user(user_id)
 
     user_repository.delete.assert_not_awaited()
-    session.commit.assert_not_awaited()
+    user_repository.commit.assert_not_awaited()

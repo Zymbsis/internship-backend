@@ -4,7 +4,6 @@ from uuid import UUID
 
 from fastapi import Depends
 
-from app.db.postgres import DbSessionDep
 from app.exceptions.base import ConflictError, NotFoundError
 from app.models import User as UserModel
 from app.repositories.user_repository import UserRepositoryDep
@@ -19,10 +18,8 @@ class UserService:
     def __init__(
         self,
         user_repository: UserRepositoryDep,
-        session: DbSessionDep,
     ) -> None:
         self._user_repository = user_repository
-        self._session = session
 
     async def get_users(self, filters: FilterParams) -> UsersListResponse:
         offset, limit = (filters.page - 1) * filters.limit, filters.limit
@@ -49,7 +46,7 @@ class UserService:
             last_name=data.last_name,
         )
         created = await self._user_repository.create(user)
-        await self._session.commit()
+        await self._user_repository.commit()
 
         detail = f"User created: user_id={created.id} email={created.email}"
         logger.info(detail)
@@ -64,7 +61,7 @@ class UserService:
         for field, value in payload.model_dump(exclude_unset=True).items():
             setattr(existing, field, value)
         updated = await self._user_repository.update(existing)
-        await self._session.commit()
+        await self._user_repository.commit()
 
         detail = f"User updated: user_id={updated.id}"
         logger.info(detail)
@@ -77,7 +74,7 @@ class UserService:
             raise NotFoundError("User not found")
 
         await self._user_repository.delete(existing)
-        await self._session.commit()
+        await self._user_repository.commit()
 
         detail = f"User deleted: user_id={user_id}"
         logger.info(detail)
