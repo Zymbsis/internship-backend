@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -5,14 +6,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.core.logging import setup_logging
 from app.db import postgres, redis
 from app.exceptions.base import AppError, ForbiddenError, NotFoundError
 from app.exceptions.handlers import handle_app_error, handle_forbidden, handle_not_found
 from app.routers.api import api_router
 
+logger = logging.getLogger(__name__)
+
+setup_logging(settings.environment)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    logger.info("Starting application")
     await postgres.connect(app)
     await redis.initialize(app)
 
@@ -20,6 +27,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     await redis.shutdown(app)
     await postgres.disconnect(app)
+    logger.info("Application stopped")
 
 
 app = FastAPI(lifespan=lifespan)
